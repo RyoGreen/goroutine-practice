@@ -13,7 +13,7 @@ func goroutine(s []string, c chan string) {
 
 func main() {
 	words := []string{"test1!", "test2!", "test3!", "test4!"}
-	c := make(chan string)
+	c := make(chan string, len(words))
 	go goroutine(words, c)
 	for w := range c {
 		fmt.Println(w)
