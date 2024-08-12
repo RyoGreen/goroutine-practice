@@ -1,21 +1,43 @@
 package main
 
-import "fmt"
-
-func goroutine(s []string, c chan string) {
-	var keyword string
-	for _, v := range s {
-		keyword += v
-		c <- keyword
-	}
-	close(c)
-}
+import (
+	"fmt"
+	"sync"
+	"time"
+)
 
 func main() {
-	words := []string{"test1!", "test2!", "test3!", "test4!"}
-	c := make(chan string, len(words))
-	go goroutine(words, c)
-	for w := range c {
-		fmt.Println(w)
-	}
+	userName := fetchUser()
+	respLikeCh := make(chan int, 1)
+	respMatchCh := make(chan string, 1)
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go fetchUserLikes(userName, respLikeCh, &wg)
+	go fetchUserMatch(userName, respMatchCh, &wg)
+	wg.Wait()
+
+	func() {
+		close(respLikeCh)
+		close(respMatchCh)
+	}()
+
+	fmt.Println("likes: ", <-respLikeCh)
+	fmt.Println("match: ", <-respMatchCh)
+}
+
+func fetchUser() string {
+	time.Sleep(time.Millisecond * 500)
+	return "Taro"
+}
+
+func fetchUserLikes(userName string, ch chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	time.Sleep(time.Millisecond * 450)
+	ch <- 1
+}
+
+func fetchUserMatch(userName string, ch chan string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	time.Sleep(time.Millisecond * 200)
+	ch <- "Hanako"
 }
